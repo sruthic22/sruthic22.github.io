@@ -1,0 +1,332 @@
+DROP DATABASE lab;
+CREATE DATABASE lab;
+
+USE lab;
+
+CREATE TABLE chemical
+(formula VARCHAR(30) PRIMARY KEY NOT NULL,
+physical_desc VARCHAR(50),
+reactivity INT,
+state_of_matter VARCHAR(10),
+molecular_weight INT NOT NULL,
+boiling_point INT,
+hazardous BOOLEAN NOT NULL);
+
+INSERT INTO chemical VALUES 
+("H2O", "clear liquid", 5, "liquid", 18.02, 100, false), 
+("HCl", "clear liquid", 10, "liquid", 17, 50,true),
+("NaCl", "white salt", 6, "solid", 30, 200, false),
+("H2", "odorless gas", 3, "gas", 2, -20, false),
+("Al", "silvery metal", 4, "solid", 34, 500, false);
+
+CREATE TABLE reactant
+(chemId INT PRIMARY KEY NOT NULL, 
+name VARCHAR(50),
+amount INT NOT NULL,
+expdate VARCHAR(20),
+formula VARCHAR(30),
+CONSTRAINT chemical_type
+	FOREIGN KEY (formula)
+    REFERENCES chemical (formula)
+    ON UPDATE CASCADE ON DELETE CASCADE);
+
+INSERT INTO reactant VALUES
+(1, "Hydrochloric acid", 100, "05/05/2021", "HCl"),
+(2, "Table salt", 500, "10/8/2000", "NaCl"),
+(3, "Hydrogen", 20, "99/99/9999", "H2"),
+(4, "Water", 1000, "99/99/9999", "H2O"),
+(5, "Aluminum", 50, "05/08/3030", "Al");
+
+
+CREATE TABLE lab
+(labNo INT PRIMARY KEY NOT NULL, 
+name VARCHAR(50),
+location VARCHAR(50),
+department VARCHAR(50));
+
+INSERT INTO lab VALUES
+(1, "Behrakis Health Science Building", "Chemistry"),
+(2, "Hurtig Hall", "Molecular biology"),
+(3, "West Village H", "Data science"),
+(4, "Mugar Hall", "Physics"),
+(5, "Richards Hall", "Mathematics");
+
+CREATE TABLE equipment
+(equipID INT PRIMARY KEY NOT NULL,
+equipname VARCHAR(50),
+equiptype VARCHAR(50),
+labNo INT,
+CONSTRAINT found_in
+	FOREIGN KEY (labNo)
+    REFERENCES lab (labNo));
+    
+INSERT INTO equipment VALUES
+(100, "centrifuge", "biology", 1),
+(200, "bunsen burner", "general", 2),
+(300, "beaker", "general", 3),
+(400, "spring scale", "physics", 4),
+(500, "plasteur pippette", "chemistry", 5);
+    
+CREATE TABLE researcher
+(empId INT PRIMARY KEY NOT NULL, 
+name VARCHAR(50),
+position VARCHAR(50),
+labNo INT,
+CONSTRAINT works_at
+	FOREIGN KEY (labNo)
+    REFERENCES lab (labNo)
+	ON UPDATE CASCADE ON DELETE CASCADE);
+    
+INSERT INTO researcher VALUES
+(101, "Bailey Howard", "research assistant", 1),
+(214, "Marissa Shorter", "labratory technician", 2),
+(389, "Brandon Toner", "labratory assistant", 3), 
+(172, "Kyle Rigley", "research director", 4),
+(233, "Hannah Gebheart", "labratory manager", 5);
+
+CREATE TABLE experiment
+(expNo INT PRIMARY KEY NOT NULL, 
+type VARCHAR(50),
+purpose VARCHAR(70),
+difficulty VARCHAR(50),
+labNo INT,
+CONSTRAINT lab_performed_in
+	FOREIGN KEY (labNo)
+    REFERENCES lab (labNo)
+	ON UPDATE CASCADE ON DELETE CASCADE);
+    
+INSERT INTO experiment VALUES
+(1, "controlled", "to understand the genes of aging", "moderate", 1),
+(2, "field", "test a protein therapeutic for ALS", "high", 2),
+(3, "natural", "predict weather patterns in the northeast", "low", 3),
+(4, "controlled", "discover new drug for beta thalassemia", "high", 4), 
+(5, "field", "create new program to monitor company profits", "moderate", 5); 
+
+CREATE TABLE experiment_chemicals
+(expNo INT NOT NULL,
+formula VARCHAR(30) NOT NULL,
+amount INT NOT NULL,
+CONSTRAINT exp
+	FOREIGN KEY (expNo)
+    REFERENCES experiment (expNo)
+	ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT chem
+	FOREIGN KEY (formula)
+    REFERENCES chemical (formula)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT experiment_chemcials_key PRIMARY KEY (expNo, formula));
+    
+CREATE TABLE experiment_equipment
+(expNo INT NOT NULL,
+equipID INT NOT NULL,
+CONSTRAINT exper
+	FOREIGN KEY (expNo)
+    REFERENCES experiment (expNo)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT equip
+	FOREIGN KEY (equipID)
+    REFERENCES equipment (equipID)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT experiment_equipment_key PRIMARY KEY (expNo, equipID));
+
+CREATE TABLE uses
+(expNo INT,
+empID INT NOT NULL,
+chemID INT NOT NULL,
+CONSTRAINT experim
+	FOREIGN KEY (expNo)
+    REFERENCES experiment (expNo)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT chemID
+	FOREIGN KEY (chemID)
+    REFERENCES reactant (chemID)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT empl
+	FOREIGN KEY (empID)
+    REFERENCES researcher (empID)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT use_key PRIMARY KEY (expNo, empID,chemID));
+
+CREATE TABLE makes
+(empID INT,
+chemID INT PRIMARY KEY NOT NULL,
+made_on DATE,
+CONSTRAINT employee
+	FOREIGN KEY (empID)
+    REFERENCES researcher (empID)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT react
+	FOREIGN KEY (chemID)
+    REFERENCES reactant (chemID)
+    ON UPDATE CASCADE ON DELETE CASCADE);
+    
+INSERT INTO makes VALUES
+(101, 1, "10/10/2021"),
+(101, 2, "11/10/2021"),
+(101, 3, "12/1/2021"),
+(101, 4, "5/10/2021"),
+(101, 5, "8/10/2021");
+
+CREATE TABLE chemicals_found_in
+(chemID INT PRIMARY KEY NOT NULL,
+labNo INT,
+CONSTRAINT reactant
+	FOREIGN KEY (chemID)
+    REFERENCES reactant (chemID)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT lab_found
+	FOREIGN KEY (labNo)
+    REFERENCES lab (labNo)
+	ON UPDATE CASCADE ON DELETE CASCADE);
+    
+CREATE TABLE equipment_found_in
+(equipID INT PRIMARY KEY NOT NULL,
+labNo INT,
+CONSTRAINT piece_of_equipment
+	FOREIGN KEY (equipID)
+    REFERENCES equipment (equipID)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT lab_found_e
+	FOREIGN KEY (labNo)
+    REFERENCES lab (labNo)
+	ON UPDATE CASCADE ON DELETE CASCADE);
+
+DELIMITER $$
+CREATE PROCEDURE available_reactants (
+	IN empID INT)
+    BEGIN
+    DECLARE labNo INT;
+    SET labNo = (SELECT labNo FROM researcher WHERE researcher.empID = empID);
+    SELECT name FROM reactants INNER JOIN
+    (SELECT chemID FROM found_in WHERE found_in.labNo = labNo) AS lab_reactants;
+    END $$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE use_reactants (
+	IN expID INT, chemicalID INT)
+    BEGIN
+	DECLARE current_amount INT;
+    DECLARE amount_needed INT;
+	SET current_amount = (SELECT amount FROM reactant WHERE chemicalID = reactant.chemID);
+    SET amount_needed = (SELECT amount FROM uses);
+	UPDATE reactant SET amount = current_amount - amount_needed WHERE reactant.chemID = chemicalID;
+    END $$
+DELIMITER ;
+
+DELIMITER $$
+CREATE FUNCTION enough_chem (expID INT, formula VARCHAR(30))
+	RETURNS BOOLEAN
+    DETERMINISTIC
+    BEGIN
+	DECLARE current_amount INT;
+    DECLARE amount_needed INT;
+	SET current_amount = (SELECT MAX(amount) FROM reactant WHERE formula = reactant.formula);
+    SET amount_needed = (SELECT amount FROM experiment_chemicals);
+	RETURN (current_amount - amount_needed) >= 0;
+    END $$
+DELIMITER ;
+
+DELIMITER $$
+CREATE FUNCTION enough_equip (expID INT, empID INT)
+	RETURNS BOOLEAN
+    DETERMINISTIC
+    BEGIN
+    DECLARE equipment_need INT;
+    DECLARE equipment_have INT;
+    DECLARE labNo INT;
+    SET labNo = (SELECT labNo FROM researcher WHERE researcher.empID = empID);
+    SET equipment_need = (SELECT COUNT(equipID) AS equipment_need FROM 
+    experiment_equipment WHERE expID = experiment_equipment.expID);
+    SET equipment_have = (SELECT COUNT(equipID) FROM 
+    (SELECT * FROM equipment_found_in WHERE equipment_found_in.labID = labNo) AS lab_equipment INNER JOIN
+    (SELECT equipID FROM experiment_equipment WHERE expID = experiment_equipment.expID) AS exp_equipment);
+    RETURN equipment_need = equipment_have;
+    END $$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE available_equipment (
+	IN empID INT)
+    BEGIN
+	SELECT name FROM reactant RIGHT JOIN 
+    (SELECT chemID FROM found_in RIGHT JOIN 
+    (SELECT labNo FROM researcher) AS lab ON found_in.labNo = researcher.labNo) 
+    AS lab_reactants ON lab_reactants.chemID = reactants.chemID;
+    END $$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE make_reactant (
+	IN empID INT, IN chemID INT, IN name VARCHAR(50), IN amount INT, IN expdate VARCHAR(20), IN formula VARCHAR(30))
+    BEGIN
+	INSERT INTO reactant VALUE (chemID,name,amount,expdate,formula);
+    INSERT INTO makes VALUE (empID, chemID, date);
+    END $$
+DELIMITER ;
+ 
+
+DELIMITER $$
+CREATE PROCEDURE make_experiment (
+	IN empID INT, IN expNo INT, IN type VARCHAR(50), IN purpose VARCHAR(70), IN difficulty VARCHAR(50))
+    BEGIN
+    DECLARE labNo INT;
+    SET labNo = (SELECT labNo FROM researcher WHERE researcher.empID = empID);
+	INSERT INTO experiment VALUE (expNo, type, purpose, difficulty, labNo);
+    END $$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE update_experiment_equipment (
+	IN expNo INT, IN equipID INT)
+    BEGIN
+	INSERT INTO requires VALUE (expNo, equipID);
+    END $$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE update_experiment_chemcials (
+	IN expNo INT, IN chemID INT)
+    BEGIN
+	INSERT INTO experiment_chemicals VALUE (expNo, chemID);
+    END $$
+DELIMITER ;
+
+DELIMITER $$
+CREATE FUNCTION experiment_possible (expID INT, empID INT)
+	RETURNS BOOLEAN
+    DETERMINISTIC
+    BEGIN
+    DECLARE labNo INT;
+	DECLARE all_chem INT;
+    SET labNo = (SELECT labNo FROM researcher WHERE researcher.empID = empID);
+    SET all_chem = (SELECT COUNT(enough) FROM 
+    (SELECT enough_chem(expID, formula) AS enough FROM experiment_chemicals WHERE experiment_chemicals.expID = expID)
+    AS list_chem WHERE enough = true);
+    RETURN enough_equip(expID, empID) AND all_chem = 0;
+    END $$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER delete_empty_reactants
+AFTER UPDATE ON reactant
+FOR EACH ROW
+BEGIN
+DELETE FROM reactant WHERE amount = 0;
+END $$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE delete_reactant (
+	IN chemID INT)
+    BEGIN
+	DELETE FROM reactant WHERE reactant.chemID = chemID;
+    END $$
+DELIMITER ;
+
+CREATE PROCEDURE use_reactant (
+	IN expNo INT, IN empID INT)
+    BEGIN
+	DELETE FROM reactant WHERE reactant.chemID = chemID;
+    END $$
+DELIMITER ;

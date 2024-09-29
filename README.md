@@ -34,11 +34,6 @@ Designed and built a scalable ETL pipeline using AWS Glue and Redshift for centr
 
 **Tech Stack**: AWS Glue, Lambda, Redshift, Python, SQL
 
-### [🔗 CRISPR Database for Gene Target Validation](https://github.com/yourusername/crispr-db)  
-*Jul 2022 – Dec 2022*  
-Created a relational database using MySQL for storing curated CRISPR screening data. Built an R package that allows streamlined interaction with the data, enabling statistical analysis of gene expression. Worked with spatial transcriptomics and machine-learning techniques to identify potential gene targets.
-
-**Tech Stack**: MySQL, R, AWS, Docker
 
 ---
 

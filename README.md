@@ -28,7 +28,7 @@ Developed traditional and deep learning models to classify breast cancer tumors.
 
 **Tech Stack**: Python, Scikit-learn, FastAPI, AWS
 
-### [🔗 Volunteer Network Platform](https://github.com/yourusername/volunteer-platform)  
+### [🔗 Volunteer Network Platform](https://github.com/sruthic22/Volunter-Network_Platform)
 *Oct 2023 – May 2024*  
 Designed and built a scalable ETL pipeline using AWS Glue and Redshift for centralizing volunteer-related data from multiple sources. Leveraged **AWS Lambda** for real-time synchronization and deployed event-driven architectures to ensure data consistency across the platform.
 

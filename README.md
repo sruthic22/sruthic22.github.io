@@ -22,7 +22,7 @@ I'm a passionate Data Scientist and Computational Biologist, blending my knowled
 
 ## 💼 Featured Projects
 
-### [🔗 Advanced Machine Learning for Breast Cancer Diagnosis](https://github.com/yourusername/breast-cancer-ml)  
+### [🔗 Advanced Machine Learning for Breast Cancer Diagnosis]([https://github.com/yourusername/breast-cancer-ml](https://github.com/sruthic22/Breast-Cancer-Diagnosis-ML/tree/main))  
 *Jan 2024 – May 2024*  
 Developed traditional and deep learning models to classify breast cancer tumors. Achieved high accuracy using Logistic Regression, Decision Trees, SVM, and neural networks. Implemented hyperparameter tuning, PCA, t-SNE for dimensionality reduction, and built a **FastAPI web app** for real-time predictions of malignancy and recurrence risk.
 
